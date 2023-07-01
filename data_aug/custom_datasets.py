@@ -176,16 +176,16 @@ class custom_histopathology_faster(data.Dataset):
             self.images = hf["dataset"]["images"][:]
 
         ### select only top 100 examples of each class, this is done for debugging only
-        all_targets = np.unique(self.targets)
-        curated_path_list = []
-        curated_target_list =[]
-        images = np.array(self.images)
-        targets = np.array(self.targets)
-        for i in all_targets:
-            curated_path_list.extend(images[np.where(targets == i)][0:1000])
-            curated_target_list.extend(targets[np.where(targets == i)][0:1000])
-        self.images = curated_path_list 
-        self.targets = curated_target_list
+        # all_targets = np.unique(self.targets)
+        # curated_path_list = []
+        # curated_target_list =[]
+        # images = np.array(self.images)
+        # targets = np.array(self.targets)
+        # for i in all_targets:
+        #     curated_path_list.extend(images[np.where(targets == i)][0:1000])
+        #     curated_target_list.extend(targets[np.where(targets == i)][0:1000])
+        # self.images = curated_path_list 
+        # self.targets = curated_target_list
 
         self.transform = transform
         self.target_transform = target_transform

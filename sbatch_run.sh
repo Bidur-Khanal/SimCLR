@@ -9,5 +9,5 @@
 module purge
 conda activate dplearning
 
-python3 -u run.py --dataset $dataset --epochs $epochs --batch-size $batch --lr $lr 
+python3 -u run.py -data /home/bk9618/learning-with-noisy-labels-benchmark/data --dataset-name $dataset --epochs $epochs --batch-size $batch --lr $lr --version $version
 
