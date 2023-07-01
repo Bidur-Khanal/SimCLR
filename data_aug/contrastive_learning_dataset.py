@@ -3,6 +3,7 @@ from data_aug.gaussian_blur import GaussianBlur
 from torchvision import transforms, datasets
 from data_aug.view_generator import ContrastiveLearningViewGenerator
 from exceptions.exceptions import InvalidDatasetSelection
+from data_aug.custom_datasets import custom_COVID19_Xray_faster, custom_histopathology_faster
 
 
 class ContrastiveLearningDataset:
@@ -19,6 +20,18 @@ class ContrastiveLearningDataset:
                                               transforms.RandomGrayscale(p=0.2),
                                               GaussianBlur(kernel_size=int(0.1 * size)),
                                               transforms.ToTensor()])
+        
+
+        # data_transforms =  transforms.Compose([
+        #         transforms.RandomResizedCrop(size=(224,224)),
+        #         transforms.RandomHorizontalFlip(),
+        #         transforms.RandomRotation(10),
+        #         transforms.RandomAdjustSharpness(3),
+        #         transforms.RandomAutocontrast(),
+        #         transforms.RandomEqualize(),
+               
+        #     ])
+        
         return data_transforms
 
     def get_dataset(self, name, n_views):
@@ -32,7 +45,17 @@ class ContrastiveLearningDataset:
                                                           transform=ContrastiveLearningViewGenerator(
                                                               self.get_simclr_pipeline_transform(96),
                                                               n_views),
-                                                          download=True)}
+                                                          download=True),
+                                                          
+                           'COVID19_Xray': lambda: custom_COVID19_Xray_faster(self.root_folder,train=True,
+                                                              transform=ContrastiveLearningViewGenerator(
+                                                                  self.get_simclr_pipeline_transform(224),
+                                                                  n_views)),
+        
+                           'histopathology': lambda: custom_histopathology_faster(self.root_folder,train=True,
+                                                              transform=ContrastiveLearningViewGenerator(
+                                                                  self.get_simclr_pipeline_transform(224),
+                                                                  n_views))}
 
         try:
             dataset_fn = valid_datasets[name]

@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-
+from utils import AverageMeter
 import torch
 import torch.nn.functional as F
 from torch.cuda.amp import GradScaler, autocast
@@ -19,6 +19,7 @@ class SimCLR(object):
         self.model = kwargs['model'].to(self.args.device)
         self.optimizer = kwargs['optimizer']
         self.scheduler = kwargs['scheduler']
+        self.neptune_run = kwargs['neptune_run']
         self.writer = SummaryWriter()
         logging.basicConfig(filename=os.path.join(self.writer.log_dir, 'training.log'), level=logging.DEBUG)
         self.criterion = torch.nn.CrossEntropyLoss().to(self.args.device)
@@ -56,6 +57,8 @@ class SimCLR(object):
 
     def train(self, train_loader):
 
+        
+
         scaler = GradScaler(enabled=self.args.fp16_precision)
 
         # save config file
@@ -66,6 +69,10 @@ class SimCLR(object):
         logging.info(f"Training with gpu: {self.args.disable_cuda}.")
 
         for epoch_counter in range(self.args.epochs):
+            losses = AverageMeter('Loss Task1', ':.4e')
+            acc1= AverageMeter('Acc@1 Task1', ':6.2f')
+            acc5= AverageMeter('Acc@5 Task1', ':6.2f')
+
             for images, _ in tqdm(train_loader):
                 images = torch.cat(images, dim=0)
 
@@ -92,18 +99,38 @@ class SimCLR(object):
 
                 n_iter += 1
 
+                #update the loss and accuracies 
+                top1, top5 = accuracy(logits, labels, topk=(1, 5))
+                losses.update(loss.item(), images.size(0))
+                acc1.update(top1[0], images.size(0))
+                acc5.update(top5[0], images.size(0))
+
             # warmup for the first 10 epochs
             if epoch_counter >= 10:
                 self.scheduler.step()
             logging.debug(f"Epoch: {epoch_counter}\tLoss: {loss}\tTop1 accuracy: {top1[0]}")
 
+            self.neptune_run["train/loss"].log(losses.avg)
+            self.neptune_run["train/top1"].log(acc1.avg)
+            self.neptune_run["train/top5"].log(acc5.avg)
+            
+
+        
         logging.info("Training has finished.")
         # save model checkpoints
-        checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.epochs)
+        checkpoint_name = self.args.arch+"_simclr_"+'lr_'+str(self.args.lr)+'_batch_size_'+str(self.args.batch_size)+'_epoch_'\
+                            +str(self.args.epochs)+'_version_'+self.args.version+'_checkpoint.pth.tar'
+        if not os.path.exists(os.path.join(self.args.save_dir,self.args.dataset_name)):
+            os.makedirs(os.path.join(os.path.join(self.args.save_dir,self.args.dataset_name)))
+
         save_checkpoint({
             'epoch': self.args.epochs,
             'arch': self.args.arch,
             'state_dict': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-        }, is_best=False, filename=os.path.join(self.writer.log_dir, checkpoint_name))
-        logging.info(f"Model checkpoint and metadata has been saved at {self.writer.log_dir}.")
+        }, is_best=False, filename=os.path.join(self.args.save_dir,self.args.dataset_name,checkpoint_name))
+        logging.info(f"Metadata has been saved at {self.writer.log_dir} and Model has been saved at {self.args.save_dir}.")
+
+
+
+    

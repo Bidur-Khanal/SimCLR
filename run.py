@@ -5,6 +5,7 @@ from torchvision import models
 from data_aug.contrastive_learning_dataset import ContrastiveLearningDataset
 from models.resnet_simclr import ResNetSimCLR
 from simclr import SimCLR
+import neptune.new as neptune
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -13,18 +14,18 @@ model_names = sorted(name for name in models.__dict__
 parser = argparse.ArgumentParser(description='PyTorch SimCLR')
 parser.add_argument('-data', metavar='DIR', default='./datasets',
                     help='path to dataset')
-parser.add_argument('-dataset-name', default='stl10',
-                    help='dataset name', choices=['stl10', 'cifar10'])
+parser.add_argument('--dataset-name', default='stl10',
+                    help='dataset name', choices=['stl10', 'cifar10','COVID19_Xray','histopathology'])
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
                          ' | '.join(model_names) +
-                         ' (default: resnet50)')
-parser.add_argument('-j', '--workers', default=12, type=int, metavar='N',
-                    help='number of data loading workers (default: 32)')
-parser.add_argument('--epochs', default=200, type=int, metavar='N',
+                         ' (default: resnet18)')
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+                    help='number of data loading workers (default: 4)')
+parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=128, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
@@ -50,7 +51,37 @@ parser.add_argument('--temperature', default=0.07, type=float,
 parser.add_argument('--n-views', default=2, type=int, metavar='N',
                     help='Number of views for contrastive learning training.')
 parser.add_argument('--gpu-index', default=0, type=int, help='Gpu index.')
+parser.add_argument('--save_dir', default='checkpoints', type= str)
+parser.add_argument('--version', default = "1", type = str)
 
+class _RepeatSampler(object):
+    """ Sampler that repeats forever.
+
+    Args:
+        sampler (Sampler)
+    """
+
+    def __init__(self, sampler):
+        self.sampler = sampler
+
+    def __iter__(self):
+        while True:
+            yield from iter(self.sampler)
+
+
+class FastDataLoader(torch.utils.data.dataloader.DataLoader):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        object.__setattr__(self, 'batch_sampler', _RepeatSampler(self.batch_sampler))
+        self.iterator = super().__iter__()
+
+    def __len__(self):
+        return len(self.batch_sampler.sampler)
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield next(self.iterator)
 
 def main():
     args = parser.parse_args()
@@ -72,7 +103,14 @@ def main():
         train_dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True, drop_last=True)
 
+    # train_loader = FastDataLoader(
+    #     train_dataset, batch_size=args.batch_size, shuffle=True,
+    #     num_workers=args.workers, pin_memory=True, drop_last=True)
+    
+
+
     model = ResNetSimCLR(base_model=args.arch, out_dim=args.out_dim)
+    
 
     optimizer = torch.optim.Adam(model.parameters(), args.lr, weight_decay=args.weight_decay)
 
@@ -81,9 +119,20 @@ def main():
 
     #  It’s a no-op if the 'gpu_index' argument is a negative integer or None.
     with torch.cuda.device(args.gpu_index):
-        simclr = SimCLR(model=model, optimizer=optimizer, scheduler=scheduler, args=args)
+        simclr = SimCLR(model=model, optimizer=optimizer, scheduler=scheduler, neptune_run = run, args=args)
         simclr.train(train_loader)
 
 
 if __name__ == "__main__":
+    run = neptune.init_run(
+    project="bidur/covid19-xray-simclr",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIxM2NkY2I5MC01OGUzLTQzZWEtODYzYi01YTZiYmFjZmM4NmIifQ==",
+)  # your credentials
+
+
+    args = parser.parse_args()
+    params = vars(args)
+    run["parameters"] = params
+    run["all files"].upload_files("*.py")
+
     main()
