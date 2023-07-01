@@ -22,7 +22,7 @@ class ContrastiveLearningDataset:
                                                 transforms.RandomApply([color_jitter], p=0.8),
                                                 transforms.RandomGrayscale(p=0.2),
                                                 GaussianBlur(kernel_size=int(0.1 * size)),
-                                                transforms.ToTensor()
+                                                transforms.ToTensor(),
                                                 transforms.Normalize(mean=[.5], std=[.5])])
 
         elif self.dataset_name =="COVID19_Xray":
@@ -31,7 +31,7 @@ class ContrastiveLearningDataset:
                                                 transforms.RandomApply([color_jitter], p=0.8),
                                                 transforms.RandomGrayscale(p=0.2),
                                                 GaussianBlur(kernel_size=int(0.1 * size)),
-                                                transforms.ToTensor()
+                                                transforms.ToTensor(),
                                                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                 std=[0.229, 0.224, 0.225])])
         
