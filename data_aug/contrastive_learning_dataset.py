@@ -7,19 +7,33 @@ from data_aug.custom_datasets import custom_COVID19_Xray_faster, custom_histopat
 
 
 class ContrastiveLearningDataset:
-    def __init__(self, root_folder):
+    def __init__(self, root_folder, dataset_name):
         self.root_folder = root_folder
+        self.dataset_name = dataset_name
 
     @staticmethod
     def get_simclr_pipeline_transform(size, s=1):
         """Return a set of data augmentation transformations as described in the SimCLR paper."""
         color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
-        data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
-                                              transforms.RandomHorizontalFlip(),
-                                              transforms.RandomApply([color_jitter], p=0.8),
-                                              transforms.RandomGrayscale(p=0.2),
-                                              GaussianBlur(kernel_size=int(0.1 * size)),
-                                              transforms.ToTensor()])
+
+        if self.dataset_name == "histopathology":
+            data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
+                                                transforms.RandomHorizontalFlip(),
+                                                transforms.RandomApply([color_jitter], p=0.8),
+                                                transforms.RandomGrayscale(p=0.2),
+                                                GaussianBlur(kernel_size=int(0.1 * size)),
+                                                transforms.ToTensor()
+                                                transforms.Normalize(mean=[.5], std=[.5])])
+
+        elif self.dataset_name =="COVID19_Xray":
+            data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
+                                                transforms.RandomHorizontalFlip(),
+                                                transforms.RandomApply([color_jitter], p=0.8),
+                                                transforms.RandomGrayscale(p=0.2),
+                                                GaussianBlur(kernel_size=int(0.1 * size)),
+                                                transforms.ToTensor()
+                                                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                std=[0.229, 0.224, 0.225])])
         
 
         # data_transforms =  transforms.Compose([
