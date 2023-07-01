@@ -12,11 +12,11 @@ class ContrastiveLearningDataset:
         self.dataset_name = dataset_name
 
     @staticmethod
-    def get_simclr_pipeline_transform(size, s=1):
+    def get_simclr_pipeline_transform(size, dataset_name, s=1):
         """Return a set of data augmentation transformations as described in the SimCLR paper."""
         color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
 
-        if self.dataset_name == "histopathology":
+        if dataset_name == "histopathology":
             data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
                                                 transforms.RandomHorizontalFlip(),
                                                 transforms.RandomApply([color_jitter], p=0.8),
@@ -25,7 +25,7 @@ class ContrastiveLearningDataset:
                                                 transforms.ToTensor(),
                                                 transforms.Normalize(mean=[.5], std=[.5])])
 
-        elif self.dataset_name =="COVID19_Xray":
+        elif dataset_name =="COVID19_Xray":
             data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
                                                 transforms.RandomHorizontalFlip(),
                                                 transforms.RandomApply([color_jitter], p=0.8),
@@ -63,12 +63,12 @@ class ContrastiveLearningDataset:
                                                           
                            'COVID19_Xray': lambda: custom_COVID19_Xray_faster(self.root_folder,train=True,
                                                               transform=ContrastiveLearningViewGenerator(
-                                                                  self.get_simclr_pipeline_transform(224),
+                                                                  self.get_simclr_pipeline_transform(224,self.dataset_name),
                                                                   n_views)),
         
                            'histopathology': lambda: custom_histopathology_faster(self.root_folder,train=True,
                                                               transform=ContrastiveLearningViewGenerator(
-                                                                  self.get_simclr_pipeline_transform(224),
+                                                                  self.get_simclr_pipeline_transform(224,self.dataset_name),
                                                                   n_views))}
 
         try:
