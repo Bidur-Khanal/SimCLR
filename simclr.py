@@ -10,7 +10,7 @@ from tqdm import tqdm
 from utils import save_config_file, accuracy, save_checkpoint
 
 # torch.manual_seed(0)
-torch.manual_seed(100)
+# torch.manual_seed(100)
 
 
 class SimCLR(object):
