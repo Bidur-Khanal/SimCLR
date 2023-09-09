@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description='PyTorch SimCLR')
 parser.add_argument('-data', metavar='DIR', default='./datasets',
                     help='path to dataset')
 parser.add_argument('--dataset-name', default='stl10',
-                    help='dataset name', choices=['stl10', 'cifar10','COVID19_Xray','histopathology'])
+                    help='dataset name', choices=['stl10', 'cifar10','COVID19_Xray','histopathology',"fetal","dermnet","mura"])
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
@@ -125,7 +125,7 @@ def main():
 
 if __name__ == "__main__":
     run = neptune.init_run(
-    project="bidur/covid19-xray-simclr",
+    project="bidur/simclr",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIxM2NkY2I5MC01OGUzLTQzZWEtODYzYi01YTZiYmFjZmM4NmIifQ==",
 )  # your credentials
 

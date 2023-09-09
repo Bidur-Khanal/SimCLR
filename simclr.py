@@ -114,23 +114,27 @@ class SimCLR(object):
             self.neptune_run["train/loss"].log(losses.avg)
             self.neptune_run["train/top1"].log(acc1.avg)
             self.neptune_run["train/top5"].log(acc5.avg)
-            
+
+            if (epoch_counter+1)%50 == 0:
+                # save model checkpoints
+                checkpoint_name = self.args.arch+"_simclr_"+'lr_'+str(self.args.lr)+'_batch_size_'+str(self.args.batch_size)+'_epoch_'\
+                                    +str(epoch_counter+1)+'_version_'+self.args.version+'_checkpoint.pth.tar'
+                if not os.path.exists(os.path.join(self.args.save_dir,self.args.dataset_name)):
+                    os.makedirs(os.path.join(os.path.join(self.args.save_dir,self.args.dataset_name)))
+
+                
+                save_checkpoint({
+                    'epoch': epoch_counter+1,
+                    'arch': self.args.arch,
+                    'state_dict': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                }, is_best=False, filename=os.path.join(self.args.save_dir,self.args.dataset_name,checkpoint_name))
+                
+        logging.info("Training has finished.")
+        
+        logging.info(f"Metadata has been saved at {self.writer.log_dir} and Model has been saved at {self.args.save_dir}.")
 
         
-        logging.info("Training has finished.")
-        # save model checkpoints
-        checkpoint_name = self.args.arch+"_simclr_"+'lr_'+str(self.args.lr)+'_batch_size_'+str(self.args.batch_size)+'_epoch_'\
-                            +str(self.args.epochs)+'_version_'+self.args.version+'_checkpoint.pth.tar'
-        if not os.path.exists(os.path.join(self.args.save_dir,self.args.dataset_name)):
-            os.makedirs(os.path.join(os.path.join(self.args.save_dir,self.args.dataset_name)))
-
-        save_checkpoint({
-            'epoch': self.args.epochs,
-            'arch': self.args.arch,
-            'state_dict': self.model.state_dict(),
-            'optimizer': self.optimizer.state_dict(),
-        }, is_best=False, filename=os.path.join(self.args.save_dir,self.args.dataset_name,checkpoint_name))
-        logging.info(f"Metadata has been saved at {self.writer.log_dir} and Model has been saved at {self.args.save_dir}.")
 
 
 
