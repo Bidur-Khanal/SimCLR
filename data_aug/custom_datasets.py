@@ -279,10 +279,7 @@ class custom_FETAL_PLANE_faster(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        if self.mode == "train":
-            return image, target, index
-        else:
-            return image, target
+        return image, target
 
     def __len__(self):
         return len(self.targets)
@@ -349,10 +346,8 @@ class custom_dermnet_faster(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        if self.mode == "train":
-            return image, target, index
-        else:
-            return image, target
+        
+        return image, target
 
     def __len__(self):
         return len(self.targets)
@@ -421,10 +416,7 @@ class MURA_faster(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        if self.mode == "train":
-            return image, target, index
-        else:
-            return image, target
+        return image, target
 
     def __len__(self):
         return len(self.targets)
