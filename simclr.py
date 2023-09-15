@@ -115,7 +115,7 @@ class SimCLR(object):
             self.neptune_run["train/top1"].log(acc1.avg)
             self.neptune_run["train/top5"].log(acc5.avg)
 
-            if (epoch_counter+1)%50 == 0:
+            if (epoch_counter+1)%100 == 0:
                 # save model checkpoints
                 checkpoint_name = self.args.arch+"_simclr_"+'lr_'+str(self.args.lr)+'_batch_size_'+str(self.args.batch_size)+'_epoch_'\
                                     +str(epoch_counter+1)+'_version_'+self.args.version+'_checkpoint.pth.tar'

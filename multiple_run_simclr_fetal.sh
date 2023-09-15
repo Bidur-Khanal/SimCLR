@@ -3,11 +3,11 @@
 dir="sbatch_log"
 job_File="sbatch_run.sh" 
 dataset=$"fetal"
-epochs=$"400"
-batch=$"128"
+epochs=$"800"
+batch=$"512"
 
 
-for lr in 0.001 0.01
+for lr in 0.001
 do 
     for version in 1 2
     do
@@ -19,7 +19,7 @@ do
         export epochs;
         export version;
         export dataset;
-        sbatch -J $EXPT -o $STD -t 00-15:00:00 -e $ERR $job_File
+        sbatch -J $EXPT -o $STD -t 01-15:00:00 -e $ERR $job_File
     done;
 done;
 
